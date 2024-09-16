@@ -9,4 +9,9 @@ const contactSchema = Joi.object({
 	phone: Joi.string().min(11).max(15).required()
 });
 
-export default validator(contactSchema);
+const favoriteSchema = Joi.object({
+	favorite: Joi.boolean().required()
+})
+
+export const contactValidator = validator(contactSchema);
+export const favValidator = validator(favoriteSchema);
