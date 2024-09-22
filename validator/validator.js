@@ -40,7 +40,7 @@ const signupSchema = Joi.object({
 });
 
 const subscriptionSchema = Joi.object({
-	subscription: Joi.string().valid("started", "pro", "business")
+	subscription: Joi.string().valid("starter", "pro", "business")
 });
 
 export const contactValidator = validator(contactSchema);

@@ -4,10 +4,12 @@ import {
 	loginUser,
 	logoutUser,
 	getCurrentUser,
-	updateSubscription
+	updateSubscription,
+	uploadAvatar
 } from "../../controllers/userControllers.js";
 
 import { authToken } from "../../middleware/auth.js";
+import { upload } from "../../middleware/upload.js";
 
 export const router = express.Router();
 
@@ -16,3 +18,4 @@ router.post('/login', loginUser);
 router.get('/logout', authToken, logoutUser);
 router.get('/current', authToken, getCurrentUser);
 router.patch('/', authToken, updateSubscription);
+router.patch('/avatars', authToken, upload.single('avatar'), uploadAvatar);
