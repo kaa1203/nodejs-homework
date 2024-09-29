@@ -7,6 +7,8 @@ import gravatar from "gravatar";
 import { Jimp } from "jimp";
 import path from "path";
 import fs from "fs/promises";
+import { nanoid } from "nanoid";
+import { sendEmail } from "../helpers/sendEmail.js";
 
 const { SECRET_KEY } = process.env;
 
@@ -17,7 +19,7 @@ const signupUser = async (req, res) => {
 	if (error) return res.status(400).json({message: error.message});
 
 	try {
-		const {email, password} = value;
+		const { email, password } = value;
 
 		const userExist = await User.findOne({ email });
 
@@ -27,9 +29,23 @@ const signupUser = async (req, res) => {
 
 		const avatarURL = gravatar.url(email, { protocol: "http" });
 
-		await User.create({ email, password: hashedPassword, avatarURL });
+		const verificationToken = nanoid();
+		
+		await sendEmail({
+			to: email,
+			subject: "Action Required: Verify Your Email",
+			html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Click to verify email</a>`
+		});
+		
+		await User.create({ 
+			email, 
+			password: hashedPassword, 
+			avatarURL,
+			verificationToken
+		});
 
 		return res.status(201).json({ message: "Successfully Registered!" });
+
 	} catch (e) {
 		res.status(400).json(e.message);
 	}
@@ -63,7 +79,7 @@ const loginUser = async (req, res) => {
 	}
 };
 
-const logoutUser = async (req, res) => {	
+const logoutUser = async (req, res) => {
 	try {
 		await User.findByIdAndUpdate(req.user.id, { token: "" });
 		
@@ -114,9 +130,28 @@ const uploadAvatar = async(req, res) => {
 		
 		const avatarURL = path.join('/avatar', filename);
 
-		const updatedUser = await User.findByIdAndUpdate(_id, { avatarURL });
+		await User.findByIdAndUpdate(_id, { avatarURL });
 
 		res.status(200).json({ message: "Avatar updated!" })
+
+	} catch (e) {
+		res.status(400).json(e.message);
+	}
+}
+
+const verifyUser = async(req, res) => {
+	const { verificationToken } = req.params;
+	try {
+		const user = await User.findOne({ verificationToken });
+		
+		if (!user) return res.status(404).json({message: "User not found!"});
+
+		await User.findByIdAndUpdate(user._id, {
+			verify: true,
+			verificationToken: null
+		});
+
+		res.status(200).json({message: "Verification Successful!"});
 
 	} catch (e) {
 		res.status(400).json(e.message);
@@ -129,5 +164,6 @@ export {
 	logoutUser,
 	getCurrentUser,
 	updateSubscription,
-	uploadAvatar
+	uploadAvatar,
+	verifyUser
 };
