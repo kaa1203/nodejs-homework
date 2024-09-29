@@ -6,7 +6,8 @@ import {
 	getCurrentUser,
 	updateSubscription,
 	uploadAvatar,
-	verifyUser
+	verifyUser,
+	resendVerification
 } from "../../controllers/userControllers.js";
 
 import { authToken } from "../../middleware/auth.js";
@@ -21,3 +22,4 @@ router.get('/current', authToken, getCurrentUser);
 router.patch('/', authToken, updateSubscription);
 router.patch('/avatars', authToken, upload.single('avatar'), uploadAvatar);
 router.get('/verify/:verificationToken', verifyUser);
+router.post('/verify', resendVerification);

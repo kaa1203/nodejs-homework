@@ -43,7 +43,24 @@ const subscriptionSchema = Joi.object({
 	subscription: Joi.string().valid("starter", "pro", "business")
 });
 
+const resendVerSchema = Joi.object({
+	email: Joi
+		.string()
+		.email({
+			minDomainSegments: 2,
+			tlds: { 
+				allow: ["com", "net"]
+			}
+		})
+		.required()
+		.messages({
+			"any.required": "Email is required",
+			"string.email": "Invalid email format"
+		})
+})
+
 export const contactValidator = validator(contactSchema);
 export const favValidator = validator(favoriteSchema);
 export const signupValidator = validator(signupSchema);
 export const subValidator = validator(subscriptionSchema);
+export const resValidator = validator(resendVerSchema);

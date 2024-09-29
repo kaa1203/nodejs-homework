@@ -1,5 +1,5 @@
 import { User } from "../models/usersModel.js";
-import { signupValidator, subValidator } from "../validator/validator.js";
+import { signupValidator, subValidator, resValidator } from "../validator/validator.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
@@ -101,10 +101,12 @@ const updateSubscription = async (req, res) => {
 	const { error, value } = subValidator(req.body);
 	
 	if (error) return res.status(400).json({ message: error.message }); 
-	console.log(value)
+	
 	try {
 		const _id = req.user.id;
+
 		await User.findByIdAndUpdate(_id, value, { new: true });
+
 		return res.status(200).json({message: "Subscription Updated!"});
 	} catch (e) {
 		res.status(400).json(e.message);
@@ -158,6 +160,30 @@ const verifyUser = async(req, res) => {
 	}
 }
 
+const resendVerification = async(req, res) => {
+	const { error, value } = resValidator(req.body);
+
+	if (error) return res.status(400).json({message: error.message});
+	
+	try {
+		const { email } = value;
+		const verificationToken = nanoid();
+
+		await User.findOneAndUpdate({email}, { verificationToken });
+		
+		await sendEmail({
+			to: email,
+			subject: "Action Required: Verify Your Email",
+			html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Click to verify email</a>`
+		});
+
+		res.status(200).json({message: 'Verification token resended'});
+
+	} catch (e) {
+		res.status(400).json(e.message);
+	}
+}
+
 export {
 	signupUser,
 	loginUser,
@@ -165,5 +191,6 @@ export {
 	getCurrentUser,
 	updateSubscription,
 	uploadAvatar,
-	verifyUser
+	verifyUser,
+	resendVerification
 };
